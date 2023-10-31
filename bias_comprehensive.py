@@ -7,6 +7,7 @@ import pandas as pd
 import modelop.monitors.bias as bias
 import modelop.schema.infer as infer
 import modelop.utils as utils
+from pandas.core.dtypes.common import is_numeric_dtype
 
 logger = utils.configure_logger()
 
@@ -27,6 +28,25 @@ def init(job_json: dict) -> None:
     infer.validate_schema(job_json)
 
 
+#
+# Aequitas Bias will take any values that are number like, and assume a continues analysis rather than a categorical
+# one, even on integers.  So we need to take any protected columns and force them to not be number like so
+# this transformation will not occur on strings
+#
+def force_categorical(dataset: pd.DataFrame) -> pd.DataFrame:
+    # Find all protected class columns
+    input_schema_definition = infer.extract_input_schema(JOB)
+    monitoring_parameters = infer.set_monitoring_parameters(
+        schema_json=input_schema_definition, check_schema=True
+    )
+    # Change any numerics to strings so that it forces categorical analysis rather than continuous
+    for feature in monitoring_parameters["protected_classes"]:
+        if is_numeric_dtype(dataset[feature]):
+            dataset[feature] = dataset[feature].astype(str)
+
+    return dataset
+
+
 # modelop.metrics
 def metrics(dataframe: pd.DataFrame) -> dict:
     """A function to compute group and bias (diparity) metrics on sample prod data
@@ -41,6 +61,8 @@ def metrics(dataframe: pd.DataFrame) -> dict:
     Returns:
         (dict): Bias (disparity) and Group metrics for each protected class
     """
+
+    dataframe = force_categorical(dataframe)
 
     # Initialize BiasMonitor
     bias_monitor = bias.BiasMonitor(
