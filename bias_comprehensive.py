@@ -1,6 +1,8 @@
 """OOTB ModelOp Center model to compute bias (disparity) and group metrics on protected classes"""
+import json
+from pathlib import Path
 
-import pandas
+import pandas as pd
 
 import modelop.monitors.bias as bias
 import modelop.schema.infer as infer
@@ -9,6 +11,7 @@ import modelop.utils as utils
 logger = utils.configure_logger()
 
 JOB = {}
+
 
 # modelop.init
 def init(job_json: dict) -> None:
@@ -25,7 +28,7 @@ def init(job_json: dict) -> None:
 
 
 # modelop.metrics
-def metrics(dataframe: pandas.DataFrame) -> dict:
+def metrics(dataframe: pd.DataFrame) -> dict:
     """A function to compute group and bias (diparity) metrics on sample prod data
 
     Args:
@@ -54,3 +57,15 @@ def metrics(dataframe: pandas.DataFrame) -> dict:
     )
 
     yield utils.merge(bias_metrics, group_metrics)
+
+
+def main():
+    raw_json = Path('test_data/example_job.json').read_text()
+    init_param = {'rawJson': raw_json}
+    init(init_param)
+    dataset = pd.read_csv("./test_data/german_credit_data_numerical.csv", quotechar='"', header=0)
+    print(json.dumps(next(metrics(dataset)), indent=2))
+
+
+if __name__ == "__main__":
+    main()
