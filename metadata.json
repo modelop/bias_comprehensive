@@ -1,0 +1,11 @@
+{
+  "tags": [],
+  "name": "Bias Monitor: Disparity and Group Metrics - Force Categorical",
+  "description": "Model to compute disparity and group metrics on protected classes while forcing to use categorical, not continuous bucketing",
+  "modelCategory": "MODEL_MONITORING_MODEL",
+  "defaultAssociationRole": "PERFORMANCE_MODEL",
+  "frequentlyUsed": true,
+  "custom": {
+    "modelopPackageVersion": "1.3.3"
+  }
+}
